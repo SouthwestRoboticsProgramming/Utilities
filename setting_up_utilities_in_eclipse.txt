@@ -1,0 +1,5 @@
+1. Clone this repo somewhere NOT in your eclipse project directory
+2. Create a NEW Eclipse project named Utilities, removing the default 'src' dir from the source path and link 
+the JavaUtil folder in here as the sole source path folder
+3. Add the WPILibJ JARs to the build path of your new project (I reccomend setting them up as a User Library)
+4. Add the CTRE CANTalon JARs to the build path
