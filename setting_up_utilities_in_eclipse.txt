@@ -1,5 +1,13 @@
 1. Clone this repo somewhere NOT in your eclipse project directory
+
 2. Create a NEW Eclipse project named Utilities, removing the default 'src' dir from the source path and link 
 the JavaUtil folder in here as the sole source path folder
+
 3. Add the WPILibJ JARs to the build path of your new project (I reccomend setting them up as a User Library)
+
 4. Add the CTRE CANTalon JARs to the build path
+5. Add other miscellaney to the build path
+6. Export the entire linked source folder to ~/wpilib/user/java/lib/Utils2129.jar (you'll have to do this when you make changes, you can set up a jarspec)
+7. Clone the source of the new robot project somewhere
+8. AFTER the Utils2129.jar is created, create a new robot project and repeat the src shuffle to link it's src folder to the git repo
+9. Open build.properties in the new eclipse project and set a new property src.dir=some\\path\\to\\repo\\src

@@ -26,6 +26,7 @@ public class CANMotorDescriptor extends MotorDescriptor {
 
 	public WPI_TalonSRX _get() {
 		WPI_TalonSRX t = new WPI_TalonSRX(id);
+		System.out.println("Construct WPI_TalonSRX at port "+id+": "+t);
 		t.setInverted(rev);
 		return t;
 	}
