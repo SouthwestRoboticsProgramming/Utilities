@@ -1,0 +1,14 @@
+You need to install:
+ - Eclipse
+ - Utilities update
+ - Router config tool
+ - CTRE Lifeboat/Pheonix framework
+ - Git
+
+Set up repos as described
+
+Then reflash the RoboRIO with latest image, install java on it, then apply the CTRE Pheonix framework update
+You'll need to set a static IP of 10.21.29.2 on the eth0 interface on the RoboRIO
+Update any out-of-date SRXs
+
+Deploy and run code
