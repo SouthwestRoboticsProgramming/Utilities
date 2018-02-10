@@ -107,7 +107,7 @@ public class TFMini extends SensorBase implements PIDSource {
 		if(ready>=18) {
 			byte[] rawData;
 			try {
-				rawData = serialPort.read(256); //Read entire buffer
+				rawData = serialPort.read(256*256); //Read entire buffer
 			}catch (RuntimeException e) {
 				bufferErrors++;
 				putDebug("buffererrors", bufferErrors);
