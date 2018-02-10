@@ -15,6 +15,7 @@ public class TFMini extends SensorBase implements PIDSource {
 	short              rawStrength = -1;
 	int                totalFrames = 0;
 	int                errorFrames = 0;
+	int                bufferErrors = 0;
 	long               lastFrameTime = -1;
 	boolean            debugMode = false;
 	
@@ -73,6 +74,7 @@ public class TFMini extends SensorBase implements PIDSource {
 	}
 	
 	protected byte[] getLastFrame(byte[] array) {
+		//Seek through the byte array for a complete frame (i.e. 0x5959 followed by 7 bytes
 		for(int i=Math.max(0, array.length-18);i<(array.length-9);i++) {
 			if(array[i] == 0x59 && array[i+1] == 0x59) {
 				return new byte[]{array[i], array[i+1], array[i+2], array[i+3], array[i+4], array[i+5], array[i+6], array[i+7], array[i+8]};
@@ -100,34 +102,61 @@ public class TFMini extends SensorBase implements PIDSource {
 	}
 	
 	public void poll() {
-		if(serialPort.getBytesReceived()>=18) {
-			byte[] rawData = serialPort.read(256); //Read entire buffer
+		int ready = serialPort.getBytesReceived();
+		putDebug("waiting", ready);
+		if(ready>=18) {
+			byte[] rawData;
+			try {
+				rawData = serialPort.read(256); //Read entire buffer
+			}catch (RuntimeException e) {
+				bufferErrors++;
+				putDebug("buffererrors", bufferErrors);
+				serialPort.reset();
+				System.err.println("TFMini Serial I/O Overflow. Buffer size was "+ready);
+				return;
+			}
 			
-			if(debugMode) SmartDashboard.putString("tfmini_debug_buffer", bytesToHex(rawData));
+			if(rawData.length<18) {
+				bufferErrors++;
+				putDebug("buffererrors", bufferErrors);
+				serialPort.reset();
+				System.err.println("TFMini Serial I/O Underflow. Buffer size was "+rawData.length);
+				return;
+			}
+			
+			putDebug("buffer", bytesToHex(rawData));
 			
 			byte[] frame = getLastFrame(rawData);
 		
-			if(debugMode) SmartDashboard.putString("tfmini_debug_lastframe", bytesToHex(frame));
+			putDebug("frame", bytesToHex(frame));
 			
 			totalFrames++;
 			
-			if(debugMode) SmartDashboard.putNumber("tfmini_debug_totalframes", totalFrames);
+			putDebug("totalframes", totalFrames);
 			
 			if(validateFrame(frame)) {
 				rawDistance = parseRawDistance(frame);
 				rawStrength = parseRawStrength(frame);
 				lastFrameTime = System.currentTimeMillis();
 				
-				if(debugMode) SmartDashboard.putNumber("tfmini_debug_distance", rawDistance);
-				if(debugMode) SmartDashboard.putNumber("tfmini_debug_strength", rawStrength);
-				if(debugMode) SmartDashboard.putNumber("tfmini_debug_lasttime", lastFrameTime);
+				putDebug("distance", rawDistance);
+				putDebug("strength", rawStrength);
+				putDebug("lasttime", (int) lastFrameTime);
 			}else {
 				errorFrames++;
-				if(debugMode) SmartDashboard.putNumber("tfmini_debug_errorframes", errorFrames);
+				putDebug("errorframes", errorFrames);
 			}
 		}
 	}
-	
+
+	private void putDebug(String string, String value) {
+		if (debugMode) SmartDashboard.putString("tfmini_debug_"+string, value);
+	}
+
+	private void putDebug(String string, int value) {
+		if (debugMode) SmartDashboard.putNumber("tfmini_debug_"+string, value);
+	}
+
 	public short getRawDistance() {
 		return rawDistance;
 	}
@@ -141,6 +170,10 @@ public class TFMini extends SensorBase implements PIDSource {
 	}
 	
 	public int getErrorFrames() {
+		return errorFrames;
+	}
+	
+	public int getBufferFrames() {
 		return errorFrames;
 	}
 	
