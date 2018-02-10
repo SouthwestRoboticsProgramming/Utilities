@@ -56,6 +56,7 @@ public class TFMini extends SensorBase implements PIDSource {
 
 	@Override
 	public double pidGet() {
+		if (pidSourceType==PIDSourceType.kDisplacement) return (double) this.rawDistance;
 		return 0;
 	}
 	
