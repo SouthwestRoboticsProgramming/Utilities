@@ -101,51 +101,62 @@ public class TFMini extends SensorBase implements PIDSource {
 		return frame[0] == 0x59 && frame[1] == 0x59 && frame[8] == sum;
 	}
 	
+	private void hwError(String message) {
+		bufferErrors++;
+		putDebug("buffererrors", bufferErrors);
+		serialPort.reset();
+		System.err.println(message);
+	}
+	
 	public void poll() {
-		int ready = serialPort.getBytesReceived();
-		putDebug("waiting", ready);
-		if(ready>=18) {
-			byte[] rawData;
+		try {
+			int ready=0;
 			try {
-				rawData = serialPort.read(256*256); //Read entire buffer
+				ready = serialPort.getBytesReceived();
 			}catch (RuntimeException e) {
-				bufferErrors++;
-				putDebug("buffererrors", bufferErrors);
-				serialPort.reset();
-				System.err.println("TFMini Serial I/O Overflow. Buffer size was "+ready);
+				hwError("TFMini Serial I/O getBytesReceived error");
 				return;
 			}
-			
-			if(rawData.length<18) {
-				bufferErrors++;
-				putDebug("buffererrors", bufferErrors);
-				serialPort.reset();
-				System.err.println("TFMini Serial I/O Underflow. Buffer size was "+rawData.length);
-				return;
-			}
-			
-			putDebug("buffer", bytesToHex(rawData));
-			
-			byte[] frame = getLastFrame(rawData);
-		
-			putDebug("frame", bytesToHex(frame));
-			
-			totalFrames++;
-			
-			putDebug("totalframes", totalFrames);
-			
-			if(validateFrame(frame)) {
-				rawDistance = parseRawDistance(frame);
-				rawStrength = parseRawStrength(frame);
-				lastFrameTime = System.currentTimeMillis();
+			putDebug("waiting", ready);
+			if(ready>=18) {
+				byte[] rawData;
+				try {
+					rawData = serialPort.read(256*256); //Read entire buffer
+				}catch (RuntimeException e) {
+					hwError("TFMini Serial I/O Overflow. Buffer size was "+ready);
+					return;
+				}
 				
-				putDebug("distance", rawDistance);
-				putDebug("strength", rawStrength);
-				putDebug("lasttime", (int) lastFrameTime);
-			}else {
-				errorFrames++;
-				putDebug("errorframes", errorFrames);
+				if(rawData.length<18) {
+					hwError("TFMini Serial I/O Underflow. Buffer size was "+rawData.length);
+					return;
+				}
+				
+				putDebug("buffer", bytesToHex(rawData));
+				
+				byte[] frame = getLastFrame(rawData);
+			
+				putDebug("frame", bytesToHex(frame));
+				
+				totalFrames++;
+				
+				putDebug("totalframes", totalFrames);
+				
+				if(validateFrame(frame)) {
+					rawDistance = parseRawDistance(frame);
+					rawStrength = parseRawStrength(frame);
+					lastFrameTime = System.currentTimeMillis();
+					
+					putDebug("distance", rawDistance);
+					putDebug("strength", rawStrength);
+					putDebug("lasttime", (int) lastFrameTime);
+				}else {
+					errorFrames++;
+					putDebug("errorframes", errorFrames);
+				}
 			}
+		}catch(RuntimeException e) {
+			hwError("TFMini Serial I/O Unknown Error!");
 		}
 	}
 
