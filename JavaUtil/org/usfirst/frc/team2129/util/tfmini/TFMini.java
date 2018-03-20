@@ -8,7 +8,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SendableBuilder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 public class TFMini extends SensorBase implements PIDSource {
-	
 	PIDSourceType      pidSourceType = PIDSourceType.kDisplacement;
 	SerialPort         serialPort;
 	short              rawDistance = -1;
